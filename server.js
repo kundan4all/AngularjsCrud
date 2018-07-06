@@ -1,0 +1,76 @@
+const express = require ('express');
+var bodyParser = require('body-parser');
+var app = express();
+var port = process.env.PORT||1234;
+app.use(express.static(__dirname + 'client'));
+var mongoose = require('mongoose');
+
+//DB connection
+mongoose.connect('mongodb://localhost:27017/employees');
+var Employee = mongoose.model('Employee', mongoose.Schema({
+    name:String,
+    dept:String,
+    area:String,
+    status:String,
+    contact:String,
+    salary:String
+}));
+app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.json());
+app.use(express.static(__dirname + '/client'));
+
+app.get('/api/employees', function(req, res){
+	Employee.find(function(err, employees){
+		if(err)
+			res.send(err);
+		res.json(employees);
+	});
+});
+
+app.get('/api/employees/:id', function(req, res){
+	Employee.findOne({_id:req.params.id}, function(err, employee){
+		if(err)
+			res.send(err);
+		res.json(employee);
+	});
+});
+app.post('/api/employees', function(req, res){
+	Employee.create( req.body, function(err, employees){
+		if(err)
+			res.send(err);
+		res.json(employees);
+	});
+});
+
+app.delete('/api/employees/:id', function(req, res){
+	Employee.findOneAndRemove({_id:req.params.id}, function(err, employee){
+		if(err)
+			res.send(err);
+		res.json(employee);
+	});
+});
+app.put('/api/employees/:id', function(req, res){
+	var query = {
+		name:req.body.name,
+		dept:req.body.dept,
+		area:req.body.area,
+		status:req.body.status,
+		contact:req.body.contact,
+		salary:req.body.salary
+	};
+	Employee.findOneAndUpdate({_id:req.params.id}, query, function(err, employee){
+		if(err)
+			res.send(err);
+		res.json(employee);
+	});
+});
+
+app.listen(port,()=>{
+    console.log('server start on',+port);
+});
+// app.use(express.static('client'));
+// app.listen(1234, ()=> {
+//     console.log('serer start on 1234');
+//  });
